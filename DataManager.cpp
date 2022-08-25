@@ -65,6 +65,7 @@ std::string removeSubstr(const std::string& str, const std::string& pattern)
 
 
 // python-string.split(str, splitter)-like method
+// https://stackoverflow.com/questions/68396962/how-to-split-strings-in-c-like-in-python
 std::vector<std::string> splitString(const std::string& str, char splitter)
 {
 	std::vector<std::string> result;
