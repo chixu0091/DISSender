@@ -1,4 +1,4 @@
-
+ï»¿
 #include "Connection.h"
 #include "DataManager.h"
 #include "DISdata.h"
@@ -9,7 +9,7 @@
 const unsigned int PORT = 3000;
 const std::string IP("127.0.0.1");
 
-//ÏûÏ¢¼ä¸ôÉè¶¨ ¶ÁÈ¡txtĞÅÏ¢ ·¢ËÍdisÏûÏ¢
+
 int main(int argc, char* args[])
 {
 	(void)argc;

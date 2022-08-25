@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <memory>
 
@@ -14,11 +14,11 @@ typedef unsigned short ush;
 
 enum DATA_TYPE {
 	OTHER = -1,
-	MISSILE,        //¹¥»÷µ¼µ¯
-	INTERCEPTOR,    //À¹½Øµ¼µ¯
-	RADAR_M,        //¹¥»÷µ¼µ¯À×´ï
-	RADAR_T,        //¹¥»÷Ä¿±êÎïÀ×´ï
-	TARGET          //¹¥»÷Ä¿±êÎï
+	MISSILE,        //æ”»å‡»å¯¼å¼¹
+	INTERCEPTOR,    //æ‹¦æˆªå¯¼å¼¹
+	RADAR_M,        //å¯¼å¼¹é›·è¾¾
+	RADAR_T,        //ç›®æ ‡é›·è¾¾
+	TARGET          //ç›®æ ‡
 };
 
 
