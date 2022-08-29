@@ -2,91 +2,11 @@
 
 #include <utils/Conversion.h>
 
-#include <iostream>
 #include <filesystem> //c++ 17
-#include <regex>
 #include <fstream>
 
 #include "Logging.h"
 namespace fs = std::filesystem;
-
-const char* DataTypes[] =
-{
-	"MISSILE",        //攻击导弹
-	"INTERCEPTOR",    //拦截导弹
-	"RADAR_M",        //导弹雷达
-	"RADAR_T",        //目标雷达
-	"TARGET"          //目标
-};
-
-//=============================================================//
-//=======================Helper function=======================//
-//=============================================================//
-
-
-// get string form of DATA_TYPE
-std::string STRTYPE(enum DATA_TYPE type)
-{
-	return (type == OTHER) ? "OTHER" : DataTypes[type];
-}
-
-// using regex to match file name to get DATA_TYPE
-DATA_TYPE GETTYPE(const std::string& str)
-{
- 
-	std::vector<std::string> vs
-	{
-		// ASCII x5C match backslash x2E match dot
-		"^.*(\\x5C)I[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)M[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)R_M[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)R_T[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)T[0-9]+(\\x2E)txt$"
-	};
-
-	for (int i = 0; i < vs.size(); ++i) {
-		if (std::regex_match(str, std::regex(vs[i]))) {
-			//LOG_NOTICE(str + " " + vs[i] + STRTYPE(static_cast<DATA_TYPE>(i)));
-			return static_cast<DATA_TYPE>(i);
-		}
-	}
-
-	return OTHER;
-}
-
-// remove the pattern substr of given string str
-// i.e. str = "IM:xxx" after remove "^(.*?):" -> str = "xxx"
-// REMEMBER pattern here is regex; if pattern doesn't match then return str
-std::string removeSubstr(const std::string& str, const std::string& pattern)
-{
-	std::string res = std::regex_replace(str, std::regex(pattern), "");
-	return (res.empty()) ? str : res;
-}
-
-
-// python-string.split(str, splitter)-like method
-// https://stackoverflow.com/questions/68396962/how-to-split-strings-in-c-like-in-python
-std::vector<std::string> splitString(const std::string& str, char splitter)
-{
-	std::vector<std::string> result;
-	std::string current = "";
-	for (int i = 0; i < str.size(); i++) {
-		if (str[i] == splitter) {
-			if (current != "") {
-				result.push_back(current);
-				current = "";
-			}
-			continue;
-		}
-		current += str[i];
-	}
-	if (current.size() != 0)
-		result.push_back(current);
-	return result;
-}
-
-
-
 
 //=============================================================//
 //=================DataManager Member function=================//
@@ -97,12 +17,11 @@ Example::DataManager::DataManager()
 {
 }
 
-
 //default get all file paths under ./data
-void Example::DataManager::GetAllFilePaths(const std::string& path)
+void Example::DataManager::ReadAllFilePaths(const std::string& path)
 {
 	std::string tempPath;
-	tempPath = (path == "") ? "./data" : path;
+	tempPath = (path == "") ? "./testdata" : path;
 	
 	if (!fs::exists(tempPath)) {
 		LOG_ERROR("File path NOT vaild: " + tempPath);
@@ -152,6 +71,7 @@ std::shared_ptr<My2DStr> ReadFileHelper(const std::string& path)
 void Example::DataManager::ReadFileRaw(const std::string& path)
 {
 	rawDataSet.emplace(path, ReadFileHelper(path));
+	rawDataCurIndex.emplace(path, 0);
 	return;
 }
 
@@ -192,6 +112,30 @@ void Example::DataManager::GetAllDisData()
 	return;
 }
 
+// increment each file's raw data index by 1 until it's the last
+// if init is true, it means that it init first time rather than increment
+void Example::DataManager::UpdateRawIndexOnce(bool init)
+{
+	uin updated_index;
+
+	for (const auto& [path, index] : rawDataCurIndex) {
+
+		if (init) {
+			updated_index = 0;
+		}
+		else {
+			updated_index =
+				((index + 1) == rawDataSet[path]->size()) ?
+				index : index + 1;
+		}
+		rawDataCurIndex[path] = updated_index;
+
+		disDataSet[path]->parse_raw_data(rawDataSet[path]->at(updated_index));
+	}
+	return;
+}
+
+
 void Example::DataManager::SendFileDisData(Example::UDPConnection* conn, const std::string& path)
 {
 	
@@ -226,19 +170,30 @@ void Example::DataManager::SendAllFiles(Example::UDPConnection* conn)
 	return;
 }
 
-void Example::DataManager::Init()
+// firstly get all file paths;
+// then read in all raw data;
+// then convert raw data into disdata;
+void Example::DataManager::Init(const std::string& path)
 {
-	Init("");
+	ReadAllFilePaths(path);
+	ReadAllFilesRaw();
+	GetAllDisData();
+	UpdateRawIndexOnce(true);
+
+	//test: disDataSet[filePaths[0]]->print_pos();
+
 	return;
 }
 
-void Example::DataManager::Init(const std::string& path)
+// return file name at index, "" if index out of range
+std::string Example::DataManager::GetFile(int index)
 {
-	GetAllFilePaths(path);
-	ReadAllFilesRaw();
-	GetAllDisData();
-	return;
+	if (index >= filePaths.size()) {
+		return "";
+	}
+	return filePaths[index];
 }
+
 
 //=============================================================//
 //=======================print functions=======================//

@@ -1,6 +1,6 @@
 #include "DISData.h"
 
-
+// consturct DIS::EntityID as output
 DIS::EntityID getEntityID(ush site, ush application, ush ID)
 {
 	DIS::EntityID entity_id;
@@ -10,11 +10,12 @@ DIS::EntityID getEntityID(ush site, ush application, ush ID)
 	return entity_id;
 }
 
-
+// based on DATA_TYPE return presumed entity type
+// check SISO document(2022) for type https://www.sisostds.org/DesktopModules/Bring2mind/DMX/API/Entries/Download?Command=Core_Download&EntryId=46172&PortalId=0&TabId=105
 DIS::EntityType getEntityType(DATA_TYPE type)
 {
 	DIS::EntityType entity_type;    
-	// check SISO document(2022) for type https://www.sisostds.org/DesktopModules/Bring2mind/DMX/API/Entries/Download?Command=Core_Download&EntryId=46172&PortalId=0&TabId=105
+	
 	switch (type) {
 	case MISSILE:
 	case INTERCEPTOR:
@@ -27,7 +28,7 @@ DIS::EntityType getEntityType(DATA_TYPE type)
 		entity_type.setSubcategory(1);
 		entity_type.setSpecific(2);
 		entity_type.setExtra(0);
-		break;
+		break; 
 	case RADAR_M:
 	case RADAR_T:
 		//assume radar is VERA: 9.1.267.3.16.3 
@@ -45,7 +46,7 @@ DIS::EntityType getEntityType(DATA_TYPE type)
 		//TODO: Specify Target type by its location, like air
 		// land device or anything else
 		entity_type.setEntityKind(0); //Other
-		entity_type.setDomain(2);
+		entity_type.setDomain(2); // set default air
 		entity_type.setCountry(0);
 		entity_type.setCategory(0);
 		break;
@@ -53,6 +54,7 @@ DIS::EntityType getEntityType(DATA_TYPE type)
 	return entity_type;
 }
 
+ // return DIS::DeadReckoningParameter based on parameter
 DIS::DeadReckoningParameter getDRP(Example::DeadReckoningModel p) 
 {
 	DIS::DeadReckoningParameter drp;
@@ -60,20 +62,25 @@ DIS::DeadReckoningParameter getDRP(Example::DeadReckoningModel p)
 	return drp;
 }
 
-//default constructor
+// constructor warpper
 Example::DISData::DISData(ush site, ush application, ush ID, DATA_TYPE t, Example::DeadReckoningModel p)
-	: DISData(0, 0, 
+	: DISData(0, 0, t,
 		getEntityID(site, application, ID), 
 		getEntityType(t),
 		getDRP(p))
 {
+	data_type = t;
 }
 
-Example::DISData::DISData(uch version, uch exerciseid,
+
+Example::DISData::DISData(uch version, 
+	uch exerciseid, 
+	DATA_TYPE t,
 	const DIS::EntityID& entity_id, 
 	const DIS::EntityType& type,
 	const DIS::DeadReckoningParameter& drp)
 {
+	data_type = t;
 	espdu = std::make_shared<DIS::EntityStatePdu>();
 	
 
@@ -92,15 +99,17 @@ Example::DISData::DISData(uch version, uch exerciseid,
 	espdu->setDeadReckoningParameters(drp);
 	
 
-	update_ori(0.0f, 0.0f, 0.0f);
-	update_ori(0.0f, 0.0f, 0.0f);
-	update_vel(0.0f, 0.0f, 0.0f);
+	set_pos(1.0f, 0.0f, 0.0f);
+	set_ori(0.0f, 0.0f, 0.0f);
+	set_vel(0.0f, 0.0f, 0.0f);
 	frame_stamp = 3;
 
 	update_pdu();
+	//currenlt not considering ArticulationParameters
+	// TODO: ArticulationParameters
+	espdu->setLength(espdu->getMarshalledSize());
 	return;
 }
-
 
 
 //default deconstructor
@@ -111,7 +120,8 @@ Example::DISData::~DISData()
 }
 
 // set the position
-void Example::DISData::update_pos(float x, float y, float z)
+// if need update to espdu call update_pdu()
+void Example::DISData::set_pos(float x, float y, float z)
 {
 	position.setX(x);
 	position.setY(y);
@@ -120,7 +130,8 @@ void Example::DISData::update_pos(float x, float y, float z)
 }
 
 // set the orientation
-void Example::DISData::update_ori(float psi, float theta, float phi)
+// if need update to espdu call update_pdu()
+void Example::DISData::set_ori(float psi, float theta, float phi)
 {
 	orientation.setPsi(psi);
 	orientation.setTheta(theta);
@@ -129,7 +140,8 @@ void Example::DISData::update_ori(float psi, float theta, float phi)
 }
 
 // set the velocity 
-void Example::DISData::update_vel(float x, float y, float z)
+// if need update to espdu call update_pdu()
+void Example::DISData::set_vel(float x, float y, float z)
 {
 	velocity.setX(x);
 	velocity.setY(y);
@@ -138,12 +150,14 @@ void Example::DISData::update_vel(float x, float y, float z)
 }
 
 // set the frame stamp
-void Example::DISData::update_time(unsigned int t)
+// if need update to espdu call update_pdu()
+void Example::DISData::set_time(unsigned int t)
 {
 	frame_stamp = t;
 	return;
 }
 
+// set espdu from pos/ori/vel/time_dysmp saved
 void Example::DISData::update_pdu()
 {
 	espdu->setEntityLocation(position);
@@ -153,13 +167,76 @@ void Example::DISData::update_pdu()
 	return;
 }
 
+//  write espdu into buffer to be sended
 void Example::DISData::marshal(DIS::DataStream& buffer)
 {
 	espdu->marshal(buffer);
 	return;
 }
 
+// get self espdu entity id
 uch Example::DISData::get_entity_id()
 {
 	return espdu->getEntityID().getEntity();
+}
+
+
+// currently our raw data for missle/interceptor
+// we only use first 2 strings of vector for position and orientation
+// for non-aboved DATA_TYPE we only paser position
+void Example::DISData::parse_raw_data(const std::vector<std::string>& raw_data)
+{
+	std::vector<float> pos;
+	
+	pos = strV2floatV(splitString(raw_data[0], ','));
+	
+	set_pos(pos[0], pos[1], pos[2]);
+	//print_pos();
+	// none missle/interceptor type
+	if (data_type != MISSILE && data_type != INTERCEPTOR) {
+		update_pdu();
+		return;
+	}
+
+	pos.clear();
+	// rotation information
+	pos = strV2floatV(splitString(raw_data[1], ','));
+	set_ori(pos[0], pos[1], pos[2]);
+
+	update_pdu();
+	return;
+
+}
+
+// print position XYZ
+void Example::DISData::print_pos()
+{
+	LOG_WARNING(
+		std::to_string(position.getX()) + " "
+		+ std::to_string(position.getY()) + " "
+		+ std::to_string(position.getZ()));
+	
+	return;
+}
+
+// print orientation Psi Theta Phi
+void Example::DISData::print_ori()
+{
+	LOG_WARNING(
+		std::to_string(orientation.getPsi()) + " "
+		+ std::to_string(orientation.getTheta()) + " "
+		+ std::to_string(orientation.getPhi()));
+
+	return;
+}
+
+// print linear velocity XYZ
+void Example::DISData::print_vel()
+{
+	LOG_WARNING(
+		std::to_string(velocity.getX()) + " "
+		+ std::to_string(velocity.getY()) + " "
+		+ std::to_string(velocity.getZ()));
+
+	return;
 }
