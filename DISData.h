@@ -23,7 +23,7 @@ namespace Example
 		void set_pos(float x, float y, float z);
 		void set_ori(float psi, float theta, float phi);
 		void set_vel(float x, float y, float z);
-		void set_time(unsigned int t);
+		void add_time();
 
 		void update_pdu();
 		void marshal(DIS::DataStream& buffer);

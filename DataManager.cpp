@@ -21,7 +21,7 @@ Example::DataManager::DataManager()
 void Example::DataManager::ReadAllFilePaths(const std::string& path)
 {
 	std::string tempPath;
-	tempPath = (path == "") ? "./testdata" : path;
+	tempPath = (path.empty()) ? "./testdata" : path;
 	
 	if (!fs::exists(tempPath)) {
 		LOG_ERROR("File path NOT vaild: " + tempPath);
@@ -152,12 +152,16 @@ void Example::DataManager::SendFileDisData(Example::UDPConnection* conn, const s
 	}
 
 	disDataSet[path]->marshal(buffer);
+
 	conn->Send(&buffer[0], buffer.size());
 	LOG_NOTICE("Send " 
 		+ path 
 		+ " " + std::to_string(disDataSet[path]->get_entity_id()));
 	buffer.clear();
-	
+
+	//update time frame
+	disDataSet[path]->add_time();
+
 	return;
 }
 

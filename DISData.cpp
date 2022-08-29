@@ -1,4 +1,4 @@
-#include "DISData.h"
+﻿#include "DISData.h"
 
 // consturct DIS::EntityID as output
 DIS::EntityID getEntityID(ush site, ush application, ush ID)
@@ -102,7 +102,7 @@ Example::DISData::DISData(uch version,
 	set_pos(1.0f, 0.0f, 0.0f);
 	set_ori(0.0f, 0.0f, 0.0f);
 	set_vel(0.0f, 0.0f, 0.0f);
-	frame_stamp = 3;
+	frame_stamp = 0;
 
 	update_pdu();
 	//currenlt not considering ArticulationParameters
@@ -149,11 +149,13 @@ void Example::DISData::set_vel(float x, float y, float z)
 	return;
 }
 
-// set the frame stamp
+// add the frame stamp by 1
 // if need update to espdu call update_pdu()
-void Example::DISData::set_time(unsigned int t)
+void Example::DISData::add_time()
 {
-	frame_stamp = t;
+	// see https://github.com/open-dis/dis-tutorial/blob/master/Timestamps.md
+	// set last bit to one in "absolute time " mode
+	frame_stamp += 2;
 	return;
 }
 
