@@ -17,7 +17,7 @@ Example::DataManager::DataManager()
 {
 }
 
-//default get all file paths under ./data
+//default get all file paths under ./testdata
 void Example::DataManager::ReadAllFilePaths(const std::string& path)
 {
 	std::string tempPath;

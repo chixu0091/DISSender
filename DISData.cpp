@@ -154,7 +154,7 @@ void Example::DISData::set_vel(float x, float y, float z)
 void Example::DISData::add_time()
 {
 	// see https://github.com/open-dis/dis-tutorial/blob/master/Timestamps.md
-	// set last bit to one in "absolute time " mode
+	// set last bit to zero in "relative time " mode
 	frame_stamp += 2;
 	return;
 }
