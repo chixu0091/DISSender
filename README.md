@@ -24,6 +24,7 @@ Example: `./DISSender.exe ./testdata/ 1000 10`(This is default parms so `./DISSe
 filepath是读取的文件path，time interval是间隔发送的时间毫秒，max sendings是最大发包轮次  
 例子: `./DISSender.exe ./testdata/ 1000 10`(这是缺省值所以直接用 `./DISSender.exe`也可以)  
 
+![Wireshark loopback catch](./pic/wireshark_screenshot.png)
 
 ## Architecture
 Connection.h : some-SDL-udp-API Wrapper  
