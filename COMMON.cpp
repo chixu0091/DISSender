@@ -16,11 +16,12 @@ DATA_TYPE GETTYPE(const std::string& str)
 	std::vector<std::string> vs
 	{
 		// ASCII x5C match backslash x2E match dot
-		"^.*(\\x5C)I[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)M[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)R_M[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)R_T[0-9]+(\\x2E)txt$",
-		"^.*(\\x5C)T[0-9]+(\\x2E)txt$"
+		// x2F match slash
+		"^.*[(\\x5C)(\\x2F)]I[0-9]+(\\x2E)txt$",
+		"^.*[(\\x5C)(\\x2F)]M[0-9]+(\\x2E)txt$",
+		"^.*[(\\x5C)(\\x2F)]R_M[0-9]+(\\x2E)txt$",
+		"^.*[(\\x5C)(\\x2F)]R_T[0-9]+(\\x2E)txt$",
+		"^.*[(\\x5C)(\\x2F)]T[0-9]+(\\x2E)txt$"
 	};
 
 	for (int i = 0; i < vs.size(); ++i) {
