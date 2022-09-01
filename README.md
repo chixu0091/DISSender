@@ -10,6 +10,7 @@ Visual Studio Version : 2022
 
 ## Download
 `git clone https://github.com/chixu0091/DISSender.git`  
+  
 
 ## Compile and Run
 open vs sln file and build  
@@ -18,13 +19,16 @@ open vs sln file and build
 The running format is `./DISSender.exe [filepath] [time_interval] [max_sendings]`  
 which filepath is path of raw data to get DIS information, time interval is in ms to send  
 between each update iteration and max sendings defined the maximum number of iterations.  
-Example: `./DISSender.exe ./testdata/ 1000 10`(This is default parms so `./DISSender.exe` works)  
-
 基础的执行命令格式为 `./DISSender.exe [filepath] [time_interval] [max_sendings]`  
-filepath是读取的文件path，time interval是间隔发送的时间毫秒，max sendings是最大发包轮次  
-例子: `./DISSender.exe ./testdata/ 1000 10`(这是缺省值所以直接用 `./DISSender.exe`也可以)  
+filepath是读取的文件path，time interval是间隔发送的时间毫秒，max sendings是最大发包轮次
 
-![Wireshark loopback catch](./pic/wireshark_screenshot.png)
+Example: `.\x64\Debug\DISSender.exe ./testdata/ 1000 10`(This is default parms so `.\x64\Debug\DISSender.exe` works)  
+例子: `.\x64\Debug\DISSender.exe ./testdata/ 1000 10`(这是缺省值所以直接用 `.\x64\Debug\DISSender.exe`也可以)  
+
+Wireshark loopback catch as follows  
+Wireshark 本地抓包结果  
+<img src="./pic/wireshark_screenshot.png"  width="75%" height="auto" />
+
 
 ## Architecture
 Connection.h : some-SDL-udp-API Wrapper  
